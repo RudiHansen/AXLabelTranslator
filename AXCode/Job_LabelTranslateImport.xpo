@@ -1,0 +1,90 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: JOB
+
+; Microsoft Dynamics AX Job: LabelTranslateImport udlæst
+; --------------------------------------------------------------------------------
+  JOBVERSION 1
+  
+  SOURCE #LabelTranslateImport
+    #static void LabelTranslateImport(Args _args)
+    #{
+    #    SysLabelEdit    sysLabelEdit    = new SysLabelEdit();
+    #    Filename        fileName        = @"C:\Temp\TranslatedLabelFile.csv";
+    #    CommaIo         infile;
+    #    Container       record;
+    #    str             labelId;
+    #    Str             origLabelValueENUS;
+    #    str             newLabelValueENUS;
+    #    str             newLabelValueENUSAuto;
+    #    str             newLabelValueDAAuto;
+    #    str             newLabelValue;
+    #
+    #    inFile = new COMMAIO(fileName, 'R');
+    #    inFile.inFieldDelimiter(';');
+    #    While(!InFile.status())
+    #    {
+    #        Record = InFile.read();
+    #        if(Record)
+    #        {
+    #            labelId             = conPeek(record,1);
+    #            if(labelId == 'Label num')
+    #                continue;
+    #
+    #            if(labelId == literalStr('@FUG215'))
+    #                breakpoint;
+    #
+    #            origLabelValueENUS      = SysLabel::labelId2String2(labelId, 'en-us');
+    #            newLabelValueENUS       = conPeek(record,3);
+    #            newLabelValueENUSAuto   = conPeek(record,4);
+    #            newLabelValueDAAuto     = conPeek(record,5);
+    #            newLabelValueENUS       = strReplace(newLabelValueENUS,'¤',';');
+    #            newLabelValueENUSAuto   = strReplace(newLabelValueENUSAuto,'¤',';');
+    #            newLabelValueDAAuto     = strReplace(newLabelValueDAAuto,'¤',';');
+    #
+    #            if(newLabelValueENUS != "")
+    #            {
+    #                newLabelValue = newLabelValueENUS;
+    #            }
+    #            else if(newLabelValueENUSAuto != "")
+    #            {
+    #                newLabelValue = newLabelValueENUSAuto + '[Auto]';
+    #            }
+    #            else if(newLabelValueDAAuto != "")
+    #            {
+    #                newLabelValue = newLabelValueDAAuto + '[AutoDK]';
+    #            }
+    #            else
+    #            {
+    #                newLabelValue = "";
+    #            }
+    #
+    #            if(newLabelValue == labelId)
+    #                continue;
+    #
+    #            if(newLabelValue == "")
+    #                continue;
+    #
+    #            if(newLabelValue != origLabelValueENUS)
+    #            {
+    #                info(strFmt('Update label %1 = %2',labelId,newLabelValue));
+    #                try
+    #                {
+    #                    SysLabelEdit.labelModify('en-us',labelId,newLabelValue,"Auto Translate",SysLabelApplModule::None);
+    #                }
+    #                catch
+    #                {
+    #                    SysLabelEdit.labelModify('en-us',labelId,newLabelValue,"Auto Translate2",SysLabelApplModule::None);
+    #                }
+    #            }
+    #        }
+    #    }
+    #}
+  ENDSOURCE
+  PROPERTIES
+    Origin              #{69B86B45-D927-45D8-9F6E-30DDDD2FA0CA}
+  ENDPROPERTIES
+  
+
+***Element: END
