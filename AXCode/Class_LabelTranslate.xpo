@@ -1,0 +1,183 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: CLS
+
+; Microsoft Dynamics AX Class: LabelTranslate unloaded
+; --------------------------------------------------------------------------------
+  CLSVERSION 1
+  
+  CLASS #LabelTranslate
+    PROPERTIES
+      Name                #LabelTranslate
+      Extends             #RunBase
+      Origin              #{CDC3545A-A7CF-441C-9AC7-23BF012BCECE}
+    ENDPROPERTIES
+    
+    METHODS
+      SOURCE #classDeclaration
+        #class LabelTranslate extends RunBase
+        #{
+        #    FilePath        filePath;
+        #    FileName        fileNameSource;
+        #    Filename        fileNameTranslated;
+        #    LabelId         translateLabelId;
+        #    LanguageId      languageIdFrom;
+        #    LanguageId      languageIdTo;
+        #    Direction_IN    direction;
+        #}
+      ENDSOURCE
+      SOURCE #labelTranslateExport
+        #private void labelTranslateExport()
+        #{
+        #    #File
+        #    SysLabel    sysLabel = new SysLabel(languageIdFrom);
+        #    Filename    localFileName;
+        #    TextBuffer  textBuffer      = new TextBuffer();
+        #    str         labelValueFrom;
+        #    str         labelValueTo;
+        #
+        #    str         label;
+        #    int         maxLabelId      = sysLabel.maxLabelId(translateLabelId);
+        #    int         idx             = 0;
+        #    ;
+        #    textBuffer.setText('Label num;Label text\n');
+        #    this.progressInit(strFmt('Export labelfile %1',translateLabelId),maxLabelId,#AviUpdate);
+        #
+        #    while(idx <= maxLabelId)
+        #    {
+        #        label           = '@' + translateLabelId + int2str(idx);
+        #        if(sysLabel.exists(label))
+        #        {
+        #            labelValueFrom  = SysLabel::labelId2String2(label, languageIdFrom);
+        #            labelValueTo    = SysLabel::labelId2String2(label, languageIdTo);
+        #
+        #            if(labelValueFrom == label)
+        #            {
+        #                labelValueFrom = "";
+        #            }
+        #
+        #            if(labelValueTo == label)
+        #            {
+        #                labelValueTo = "";
+        #            }
+        #
+        #            labelValueFrom  = strReplace(labelValueFrom,';','¤');
+        #            labelValueTo    = strReplace(labelValueTo,';','¤');
+        #            if(strScan(labelValueFrom,';',1,999))
+        #            {
+        #                throw warning(strFmt('Label %1 language %2 contains ;',label,languageIdFrom));
+        #            }
+        #
+        #            if(strScan(labelValueTo,';',1,999))
+        #            {
+        #                throw warning(strFmt('Label %1 language %2 contains ;',label,languageIdTo));
+        #            }
+        #
+        #            if(labelValueFrom != "")
+        #                sleep(0);
+        #
+        #            if(labelValueFrom != "" && labelValueTo == "")
+        #            {
+        #                textBuffer.appendText(label + ';' + labelValueFrom + '\n');
+        #            }
+        #        }
+        #        progress.setText(label);
+        #        progress.setCount(idx);
+        #        idx++;
+        #    }
+        #    localFileName = System.IO.Path::Combine(filePath,fileNameSource);
+        #    TextBuffer.toFile(localFileName);
+        #}
+      ENDSOURCE
+      SOURCE #labelTranslateImport
+        #private void labelTranslateImport()
+        #{
+        #    Filename            localFileName   = System.IO.Path::Combine(filePath,fileNameTranslated);
+        #    SysLabelEdit        sysLabelEdit    = new SysLabelEdit();
+        #    CommaIo             infile;
+        #    Container           record;
+        #    Counter             retryCounter;
+        #    LabelDescription    labelDescription;
+        #    LabelId             labelId;
+        #    str                 origLabelValueTo;
+        #    str                 newLabelValueTo;
+        #
+        #    inFile = new COMMAIO(localFileName, 'R');
+        #    inFile.inFieldDelimiter(';');
+        #    While(!InFile.status())
+        #    {
+        #        Record = InFile.read();
+        #        if(Record)
+        #        {
+        #            labelId             = conPeek(record,1);
+        #            if(labelId == 'Label num')
+        #                continue;
+        #
+        #            origLabelValueTo    = SysLabel::labelId2String2(labelId, languageIdTo);
+        #
+        #            newLabelValueTo     = conPeek(record,3);
+        #            newLabelValueTo     = strReplace(newLabelValueTo,'¤',';');
+        #            newLabelValueTo     = strLTrim(strRTrim(newLabelValueTo));
+        #
+        #            if(newLabelValueTo  == labelId)
+        #                continue;
+        #
+        #            if(newLabelValueTo  == "")
+        #                continue;
+        #
+        #            if(newLabelValueTo  != origLabelValueTo)
+        #            {
+        #                retryCounter = 0;
+        #                labelDescription    = 'Auto Translate';
+        #                try
+        #                {
+        #                    SysLabelEdit.labelModify(languageIdTo,labelId,newLabelValueTo,labelDescription,SysLabelApplModule::None);
+        #                }
+        #                catch
+        #                {
+        #                    retryCounter++;
+        #                    labelDescription    = 'Auto Translate' + int2str(retryCounter);
+        #                    retry;
+        #                }
+        #                info(strFmt('Update label %1 = %2, Description %3',labelId,newLabelValueTo,labelDescription));
+        #            }
+        #        }
+        #    }
+        #}
+      ENDSOURCE
+      SOURCE #new
+        #private void new()
+        #{
+        #    super();
+        #
+        #    filePath            = @'C:\Temp';                       // Change this to match where you want files to go
+        #    fileNameSource      = 'SourceLabelFile.csv';            // This is the file where Labels will be exported to
+        #    fileNameTranslated  = 'TranslatedLabelFile.csv';        // This is the file where Translated labels will be imported from
+        #    translateLabelId    = 'DMF';                            // What label file to Translate
+        #    languageIdFrom      = 'en-us';                          // Language to translate from
+        #    languageIdTo        = 'da';                             // Language to translate to
+        #    direction           = Direction_IN::Export;             // Controls whether to run Export or Import method
+        #}
+      ENDSOURCE
+      SOURCE #run
+        #public void run()
+        #{
+        #    if(direction == Direction_IN::Export)
+        #        this.labelTranslateExport();
+        #    else
+        #        this.labelTranslateImport();
+        #}
+      ENDSOURCE
+      SOURCE #main
+        #public static void main(Args _args)
+        #{
+        #    LabelTranslate  labelTranslate = new LabelTranslate();
+        #
+        #    labelTranslate.run();
+        #}
+      ENDSOURCE
+    ENDMETHODS
+  ENDCLASS
+
+***Element: END

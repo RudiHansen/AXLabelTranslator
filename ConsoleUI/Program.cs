@@ -8,8 +8,6 @@ namespace ConsoleUI
 {
     class Program
     {
-        public const string APIKey = "REPLACE WITH APIKEY";
-
         static void Main(string[] args)
         {
             string FilePath = @"C:\Temp";
@@ -21,7 +19,7 @@ namespace ConsoleUI
             listLabelData = ReadLabelDataFromCsv(Path.Combine(FilePath, SourceLabelFile));
             Console.WriteLine($"Read {listLabelData.Count()} labels from {SourceLabelFile}");
 
-            listLabelData = TranslateLabelsToEn(listLabelData);
+            listLabelData = TranslateLabels(listLabelData);
 
             WriteLabelDataToCsv(listLabelData, Path.Combine(FilePath, TranslatedLabelFile));
             Console.WriteLine($"Written {listLabelData.Count()} labels to {TranslatedLabelFile}");
@@ -44,18 +42,7 @@ namespace ConsoleUI
 
                         LabelData labelData = new LabelData();
                         labelData.LabelId = values[0];
-                        labelData.LabelTextDk = values[1];
-                        labelData.LabelTextENUS = values[2];
-                        labelData.LabelTextAuto = values[3];
-                        labelData.LabelTextAutoDk = values[4];
-                        if (values.Count() > 5 && values[5] == "True")
-                        {
-                            labelData.Changed = true;
-                        }
-                        else
-                        {
-                            labelData.Changed = false;
-                        }
+                        labelData.LabelTextFrom = values[1];
                         listLabelData.Add(labelData);
                     }
                     readLine = true;
@@ -64,24 +51,16 @@ namespace ConsoleUI
             }
             return listLabelData;
         }
-        private static List<LabelData> TranslateLabelsToEn(List<LabelData> listLabelData)
+        private static List<LabelData> TranslateLabels(List<LabelData> listLabelData)
         {
-            var listToTranslate = listLabelData.Where(item => item.LabelTextDk != "").Where(item => item.LabelTextENUS == "").Where(item => item.LabelTextAuto == "");
-
-            string accessToken = Trans.GetAccessToken(APIKey);
+            string accessToken = Trans.GetAccessToken(Settings.GetAPIKey());
             int currentRecord = 0;
-            int maxRecords2Translate = listToTranslate.Count();
+            int maxRecords2Translate = listLabelData.Count();
 
-            Console.WriteLine($"Translating {maxRecords2Translate}");
-            //int maxRecords2Translate = 100;
+            Console.WriteLine($"Translating {listLabelData.Count()}");
 
-            foreach (var labelData in listToTranslate)
+            foreach (var labelData in listLabelData)
             {
-                if (currentRecord > maxRecords2Translate)
-                {
-                    break;
-                }
-
                 ShowPercentProgress($"Translating {labelData.LabelId} - ", currentRecord, maxRecords2Translate);
 
                 int retries = 3;
@@ -89,14 +68,14 @@ namespace ConsoleUI
                 {
                     try
                     {
-                        labelData.LabelTextAuto = Trans.Translate(accessToken, labelData.LabelTextDk, "da", "en");
+                        labelData.LabelTextTo = Trans.Translate(accessToken, labelData.LabelTextFrom, Settings.LanguageIdFrom(),Settings.LanguageIdTo());
                         retries = 0;
                     }
                     catch (Exception e)
                     {
                         if (e.Message == "The remote server returned an error: (400) Bad Request.")
                         {
-                            accessToken = Trans.GetAccessToken(APIKey);
+                            accessToken = Trans.GetAccessToken(Settings.GetAPIKey());
                             retries--;
                         }
                         else
@@ -115,10 +94,10 @@ namespace ConsoleUI
         {
             using (TextWriter file = new StreamWriter(_fileName, false, Encoding.GetEncoding(1252)))
             {
-                file.WriteLine("Label num;Danish;English;Auto Translate;Auto Danish;Changed");
+                file.WriteLine("Label num;Label text;Translated text");
                 foreach (var labelData in listLabelData)
                 {
-                    file.WriteLine($"{labelData.LabelId};{labelData.LabelTextDk};{labelData.LabelTextENUS};{labelData.LabelTextAuto};{labelData.LabelTextAutoDk};{labelData.Changed}");
+                    file.WriteLine($"{labelData.LabelId};{labelData.LabelTextFrom};{labelData.LabelTextTo}");
                 }
             }
         }

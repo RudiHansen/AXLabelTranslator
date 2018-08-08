@@ -6,22 +6,31 @@ Before you can use the C# program you need to follow this guide to setup the Azu
 
 https://docs.microsoft.com/en-us/azure/cognitive-services/translator/translator-text-how-to-signup
 
-Insert the API key in C# in the file ConsoleUI\Program.cs on line 11. (Replace the text ""REPLACE WITH APIKEY)
+Insert the API key in C# in the file ConsoleUI\Settings.cs on line 13. (Replace the text ""REPLACE WITH APIKEY)
 
 ## HOW TO USE 
+
+### Dynamics AX
 Start with importing the X++ code from :
 
-AXCode\Job_LabelTranslateExport.xpo
+AXCode\Class_LabelTranslate.xpo
 
-AXCode\Job_LabelTranslateImport.xpo
+This will import the class LabelTranslate, for now you will have to do some changes in the class to use it.
+In the New method, you have to change the variables to make the class do what you want.
 
-
-And run the Job LabelTranslateExport to export the list of Danish labels to the file C:\TEMP\SourceLabelFile.csv
-
+### C# 
+Edit ConsoleUI\Settings.cs, in this file the API key and Laguage for translation is setup.
 Run the C# program, it will read all the labels in the file C:\TEMP\SourceLabelFile.csv, translate them and write the result to the file C:\TEMP\TranslatedLabelFile.csv
 
+### Dynamics AX
 If you are running a version controll system for AX, you might need to checkout the label file you are working on, before you run the next step.
 
 Run the Job LabelTranslateImport to import the translated labels from the file C:\TEMP\TranslatedLabelFile.csv
 
 Then again if you are running a version controll system for AX, you need to checkin the label file.
+
+## Changelog
+### TODO
+
+### DONE
+001.	Use variables for settings C# Settings.cs, AX LabelTranslate.new
