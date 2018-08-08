@@ -31,6 +31,11 @@ Then again if you are running a version controll system for AX, you need to chec
 
 ## Changelog
 ### TODO
+002.	AX - Add dialog to class, all settings must be set in Dialog
+003.    C# - API Key must be saved locally
+004.    C# - Move variable FilePath, SourceLabelFile and TranslatedLabelFile to Settings.cs
+004.    C# - Change UI to Windows Forms
+005.    C# - All Values in Settings.cs should be changable in Form.
 
 ### DONE
 001.	Use variables for settings C# Settings.cs, AX LabelTranslate.new
